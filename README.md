@@ -13,7 +13,7 @@ docker build --build-arg VCS_REF=`git rev-parse --short HEAD` \
 
 ## License
 
-![License](https://img.shields.io/github/license/lonly197/docker-alpine-python.svg)
+![License](https://img.shields.io/github/license/lonly197/docker-spark.svg)
 
 ## Contact me
 

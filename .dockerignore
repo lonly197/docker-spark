@@ -36,3 +36,4 @@ Makefile
 # Docker build
 docker-compose.yml
 Makefile
+hooks

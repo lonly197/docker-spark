@@ -47,7 +47,7 @@ RUN set -x \
     && update-ca-certificates \
     ## Download spark bin
     && wget -q -O - http://mirrors.hust.edu.cn/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
-        | tar -xzf - -C /tmp \
+        | tar -zxvf - -C /tmp \
     && mv /tmp/spark-* ${SPARK_HOME} \
     ## Clean
     && apk del build-dependencies \

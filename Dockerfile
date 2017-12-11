@@ -77,3 +77,5 @@ RUN set -x \
     && rm -rf /tmp/*
 
 WORKDIR ${SPARK_HOME}
+
+EXPOSE 8088 4040

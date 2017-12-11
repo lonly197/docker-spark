@@ -41,12 +41,14 @@ ENV SPARK_HOME=/usr/local/spark \
 RUN set -x \
     ## Define variant
     && SPARK_VERSION=2.2.1 \
-    && HADOOP_VERSION=2.7 \
-    ## Install base dependency lib 
-    # && apk add --no-cache --upgrade --virtual=build-dependencies openssl ca-certificates tar \
-    # && update-ca-certificates \
+    && HADOOP_VERSION=2.7 \\
     ## Download spark bin
-    && wget http://mirrors.hust.edu.cn/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+    && mirror_url=$( \
+        wget -q -O - "http://www.apache.org/dyn/closer.lua/?as_json=1" \
+        | grep "preferred" \
+        | sed -n 's#.*"\(http://*[^"]*\)".*#\1#p' \
+        ) \
+    && wget ${mirror_url}spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
     && tar -zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /tmp \
     && mv /tmp/spark-* ${SPARK_HOME} \
     ## Clean

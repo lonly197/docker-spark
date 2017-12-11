@@ -41,7 +41,7 @@ ENV SPARK_HOME=/usr/local/spark \
 RUN set -x \
     ## Define variant
     && SPARK_VERSION=2.2.1 \
-    && HADOOP_VERSION=2.7 \\
+    && HADOOP_VERSION=2.7 \
     ## Download spark bin
     && mirror_url=$( \
         wget -q -O - "http://www.apache.org/dyn/closer.lua/?as_json=1" \

@@ -1,6 +1,6 @@
-FROM lonly/docker-alpine-python:3.6.3
+FROM lonly/docker-alpine-python:3.6.3-slim
 
-ARG VERSION=2.2.0
+ARG VERSION=2.2.1-slim
 ARG BUILD_DATE
 ARG VCS_REF
 
@@ -29,22 +29,50 @@ RUN set -x \
     && rm -rf /var/cache/apk/* \
     && rm -rf /tmp/*
 
-FROM lonly/docker-hadoop:2.9.0
+FROM lonly/docker-alpine-java:openjdk-8u131
 
-ENV SPARK_DIST_CLASSPATH="$HADOOP_HOME/etc/hadoop/*:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/tools/lib/*" \
-    PATH=$PATH:$SPARK_HOME/bin
+# Define spark environment
+ENV SPARK_HOME=/usr/local/spark \
+    SPARK_CONF_DIR=${SPARK_HOME}/conf \
+    PYTHONPATH=${SPARK_HOME}/python \
+    PATH=${PATH}:${SPARK_HOME}/bin:${PYTHONPATH}:${PYTHONPATH}/python/lib/py4j-0.9-src.zip
 
 # Install Spark Package
 RUN set -x \
-    ## Download hadoop bin
-    && mirror_url=$( \
-        wget -q -O - "http://www.apache.org/dyn/closer.cgi/?as_json=1" \
-        | grep "preferred" \
-        | sed -n 's#.*"\(http://*[^"]*\)".*#\1#p' \
-        ) \
-    && wget -q -O - ${mirror_url}/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
+    ## Define variant
+    && SPARK_VERSION=2.2.1 \
+    && HADOOP_VERSION=2.7 \
+    && SPARK_PACKAGE='spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}' \
+    ## Install base dependency lib 
+    && apk add --no-cache --upgrade --virtual=build-dependencies openssl ca-certificates \
+    && update-ca-certificates \
+    ## Download spark bin
+    && wget -q -O - http://mirrors.hust.edu.cn/apache/spark/spark-{SPARK_VERSION}/${SPARK_PACKAGE}.tgz \
         | tar -xzf - -C /tmp \
-    && mv /tmp/hadoop-* ${HADOOP_HOME} \
+    && mv /tmp/spark-* ${SPARK_HOME} \
+    ## Clean
+    && apk del build-dependencies \
+    && rm -rf ${SPARK_PACKAGE}.tgz \
+    && rm -rf /root/.cache \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
+
+## Setting Environment
+RUN set -x \
+    ## Add profile
+    && env \
+       | grep -E '^(JAVA|HADOOP|PATH|YARN|SPARK|PYTHON)' \
+       | sed 's/^/export /g' \
+       > ~/.profile \
+    && cp ~/.profile /etc/profile.d/spark \
+    && sed -i 's@${JAVA_HOME}@'${JAVA_HOME}'@g' ${SPARK_HOME}/bin/load-spark-env.sh \
+    ## Chmod user permission
+    && chown -R root:root ${SPARK_HOME} \
     ## Make soft link
-    && ln -s HADOOP_CONF_DIR /etc/hadoop \
-    && ln -s /usr/local/hadoop-${HADOOP_VERSION} /usr/local/hadoop-${HADOOP_VERSION%.*} \
+    && ln -s ${SPARK_CONF_DIR} /etc/spark \
+    ## Clean
+    && rm -rf /root/.cache \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
+
+WORKDIR ${SPARK_HOME}

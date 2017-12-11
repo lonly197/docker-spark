@@ -43,7 +43,7 @@ RUN set -x \
     && SPARK_VERSION=2.2.1 \
     && HADOOP_VERSION=2.7 \
     ## Install base dependency lib 
-    && apk add --no-cache --upgrade --virtual=build-dependencies openssl ca-certificates \
+    && apk add --no-cache --upgrade --virtual=build-dependencies openssl ca-certificates tar \
     && update-ca-certificates \
     ## Download spark bin
     && wget -q -O - http://mirrors.hust.edu.cn/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \

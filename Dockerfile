@@ -42,12 +42,11 @@ RUN set -x \
     ## Define variant
     && SPARK_VERSION=2.2.1 \
     && HADOOP_VERSION=2.7 \
-    && SPARK_PACKAGE='spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}' \
     ## Install base dependency lib 
     && apk add --no-cache --upgrade --virtual=build-dependencies openssl ca-certificates \
     && update-ca-certificates \
     ## Download spark bin
-    && wget -q -O - http://mirrors.hust.edu.cn/apache/spark/spark-{SPARK_VERSION}/${SPARK_PACKAGE}.tgz \
+    && wget -q -O - http://mirrors.hust.edu.cn/apache/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
         | tar -xzf - -C /tmp \
     && mv /tmp/spark-* ${SPARK_HOME} \
     ## Clean

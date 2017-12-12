@@ -1,4 +1,4 @@
-FROM lonly/docker-alpine-python:3.6.3-slim
+FROM lonly/docker-alpine-java:openjdk-8u131
 
 ARG VERSION=2.2.1-slim
 ARG BUILD_DATE
@@ -18,18 +18,6 @@ LABEL \
     org.label-schema.vendor="lonly197@qq.com" \
     org.label-schema.version=$VERSION \
     org.label-schema.schema-version="1.0"
-
-# Install Python Package
-RUN set -x \
-    && pip install --upgrade --no-cache-dir \
-        py4j \
-    ## Clean
-    && rm -rf /root/.cache \
-    && rm -rf *.tgz *.tar *.zip \
-    && rm -rf /var/cache/apk/* \
-    && rm -rf /tmp/*
-
-FROM lonly/docker-alpine-java:openjdk-8u131
 
 # Define spark environment
 ENV SPARK_HOME=/usr/local/spark \
@@ -73,6 +61,34 @@ RUN set -x \
     && ln -s ${SPARK_CONF_DIR} /etc/spark \
     ## Clean
     && rm -rf /root/.cache \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/*
+
+# Define python environment 
+ENV	PATH=/usr/local/bin:$PATH \
+    ## http://bugs.python.org/issue19846
+    ## > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
+    LANG=C.UTF-8
+
+# Install python
+RUN	set -x \
+	## Update apk
+	&& apk update \
+    ## Define Variant
+    && PYTHON_VERSION=3.6.3-r9 \	
+    ## Install Python package
+    && apk add --no-cache --upgrade --virtual=build-dependencies --repository http://mirrors.ustc.edu.cn/alpine/v3.6/edge/ --allow-untrusted python3 \
+    && python3 -m ensurepip \
+    && rm -r /usr/lib/python*/ensurepip \
+    && pip3 install --upgrade pip setuptools \
+    && if [[ ! -e /usr/bin/pip ]]; then ln -s pip3 /usr/bin/pip ; fi \
+    && if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi \
+    ## Install py4j
+    && pip install --upgrade --no-cache-dir py4j \
+    ## Cleanup
+    && apk del build-dependencies \
+    && rm -rf /root/.cache \
+    && rm -rf *.tgz *.tar *.zip \
     && rm -rf /var/cache/apk/* \
     && rm -rf /tmp/*
 

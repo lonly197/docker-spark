@@ -1,6 +1,6 @@
-FROM lonly/docker-alpine-java:openjdk-8u131
+FROM openjdk:8u181-jdk-alpine3.8
 
-ARG VERSION=2.2.1-slim
+ARG VERSION=2.3.2-slim
 ARG BUILD_DATE
 ARG VCS_REF
 
@@ -23,19 +23,19 @@ LABEL \
 ENV SPARK_HOME=/usr/local/spark \
     SPARK_CONF_DIR=${SPARK_HOME}/conf \
     PYTHONPATH=${SPARK_HOME}/python \
-    PATH=${PATH}:${SPARK_HOME}/bin:${PYTHONPATH}:${PYTHONPATH}/python/lib/py4j-0.9-src.zip
+    PATH=${PATH}:${SPARK_HOME}/bin:${PYTHONPATH}:${PYTHONPATH}/python/lib/py4j-0.10.7-src.zip
 
 # Install Spark Package
 RUN set -x \
     ## Define variant
-    && SPARK_VERSION=2.2.1 \
+    && SPARK_VERSION=2.3.2 \
     && HADOOP_VERSION=2.7 \
     ## Download spark bin
     && mirror_url=$( \
-        wget -q -O - "http://www.apache.org/dyn/closer.lua/?as_json=1" \
-        | grep "preferred" \
-        | sed -n 's#.*"\(http://*[^"]*\)".*#\1#p' \
-        ) \
+    wget -q -O - "http://www.apache.org/dyn/closer.lua/?as_json=1" \
+    | grep "preferred" \
+    | sed -n 's#.*"\(http://*[^"]*\)".*#\1#p' \
+    ) \
     && wget ${mirror_url}spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
     && tar -zxvf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz -C /tmp \
     && mv /tmp/spark-* ${SPARK_HOME} \
@@ -50,9 +50,9 @@ RUN set -x \
 RUN set -x \
     ## Add profile
     && env \
-       | grep -E '^(JAVA|HADOOP|PATH|YARN|SPARK|PYTHON)' \
-       | sed 's/^/export /g' \
-       > ~/.profile \
+    | grep -E '^(JAVA|HADOOP|PATH|YARN|SPARK|PYTHON)' \
+    | sed 's/^/export /g' \
+    > ~/.profile \
     && cp ~/.profile /etc/profile.d/spark \
     && sed -i 's@${JAVA_HOME}@'${JAVA_HOME}'@g' ${SPARK_HOME}/bin/load-spark-env.sh \
     ## Chmod user permission
@@ -72,8 +72,8 @@ ENV	PATH=/usr/local/bin:$PATH \
 
 # Install python
 RUN	set -x \
-	## Update apk
-	&& apk update \
+    ## Update apk
+    && apk update \
     ## Define Variant
     && PYTHON_VERSION=3.6.3-r9 \	
     ## Install Python package
